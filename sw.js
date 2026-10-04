@@ -2,8 +2,9 @@ const CACHE_NAME = 'net-monitor-v1';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
-  // './manifest.json', // Раскомментируйте, если добавите манифест
-  // './icon.png'
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
