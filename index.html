@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Сетевой Монитор</title>
+  <link rel="manifest" href="./manifest.json">
+  <style>
+    :root {
+      --bg: #f4f5f7; --text: #1f2937; --card: #ffffff; --border: #e5e7eb;
+      --primary: #3b82f6; --primary-hover: #2563eb; --warn-bg: #fffbeb;
+      --warn-text: #92400e; --success: #10b981; --danger: #ef4444; --btn-text: #fff;
+    }
+    [data-theme="dark"] {
+      --bg: #111827; --text: #f9fafb; --card: #1f2937; --border: #374151;
+      --primary: #3b82f6; --warn-bg: #422006; --warn-text: #fef3c7;
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); padding-bottom: 50px; transition: background 0.3s, color 0.3s; }
+    
+    /* Шапка */
+    header { background: var(--card); border-bottom: 1px solid var(--border); padding: 15px 20px; position: sticky; top: 0; z-index: 100; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; }
+    .btn { background: var(--primary); color: var(--btn-text); border: none; padding: 8px 16px; border-radius: 8px; font-weight: 500; cursor: pointer; text-decoration: none; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; transition: opacity 0.2s; }
+    .btn:hover { opacity: 0.9; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    
+    /* Основной контент */
+    main { max-width: 1000px; margin: 30px auto; padding: 0 15px; display: flex; flex-direction: column; gap: 20px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .card h2 { margin-bottom: 15px; font-size: 1.25rem; display: flex; align-items: center; gap: 8px; }
+    
+    /* Поле ввода */
+    .input-group { display: flex; gap: 10px; margin-top: 15px; }
+    .input-group input { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); }
+    
+    /* Предупреждение */
+    .warning { background: var(--warn-bg); color: var(--warn-text); padding: 15px; border-radius: 8px; font-weight: 500; text-align: center; border: 1px solid #fcd34d; }
+    
+    /* Списки и тесты */
+    .test-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .test-row:last-child { border-bottom: none; }
+    .status { font-size: 1.2rem; font-weight: bold; }
+    .status.loading { color: var(--primary); animation: pulse 1.5s infinite; }
+    
+    /* Сетка 3 колонки */
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+    
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+  </style>
+</head>
+<body>
+
+  <header>
+    <button class="btn" id="btnInstall" style="display: none;">📱 Приложение</button>
+    <a href="ipconf.html" class="btn btn-outline">🌐 Инфо. сети</a>
+    <a href="other.html" class="btn btn-outline">📂 Другое</a>
+    <button class="btn btn-outline" onclick="forceAppUpdate()">🔄 Перезагрузить сайт</button>
+    <button class="btn btn-outline" onclick="toggleTheme()">🌓 Смена темы</button>
+  </header>
+
+  <main>
+    <!-- Блок 1: Быстрый тест -->
+    <div class="card">
+      <h2>🚀 Быстрый тест интернета</h2>
+      <div class="test-row"><span>Соединение с Google (Интернет)</span><span class="status" id="t-google">⏳</span></div>
+      <div class="test-row"><span>Доступность Telegram (VPN)</span><span class="status" id="t-tg">⏳</span></div>
+      <div class="test-row"><span>Доступность YouTube (VPN)</span><span class="status" id="t-yt">⏳</span></div>
+      <div class="test-row" style="background: var(--bg); padding: 10px; border-radius: 6px; margin-top: 10px;">
+        <strong id="vpn-verdict">Проверка...</strong>
+      </div>
+      
+      <div class="input-group">
+        <input type="text" id="customUrl" placeholder="Введите домен (например, netflix.com)">
+        <button class="btn" onclick="checkCustomUrl()">Проверить</button>
+      </div>
+      <div class="test-row" id="custom-result" style="display:none; margin-top: 10px;">
+        <span id="custom-name"></span><span class="status" id="custom-status"></span>
+      </div>
+    </div>
+
+    <!-- Предупреждение -->
+    <div class="warning">
+      ⚠️ Нижеперечисленные тесты не рекомендуется проводить с включенным VPN!
+    </div>
+
+    <!-- Блок 2: Тест блокировок -->
+    <div class="card">
+      <h2>🛡️ Быстрый тест блокировок (Черный / Белый список)</h2>
+      <div class="test-row"><span>Белый список (ya.ru)</span><span class="status" id="t-white">⏳</span></div>
+      <div class="test-row"><span>Черный список (rutracker.org)</span><span class="status" id="t-black">⏳</span></div>
+    </div>
+
+    <!-- Блок 3: Тест популярных сайтов (3 колонки) -->
+    <div class="grid-3">
+      <div class="card">
+        <h2>🇷🇺 RU Сайты</h2>
+        <div id="list-ru"></div>
+      </div>
+      <div class="card">
+        <h2>🌍 Зарубежные</h2>
+        <div id="list-global"></div>
+      </div>
+      <div class="card">
+        <h2>🚫 Заблокированные</h2>
+        <div id="list-blocked"></div>
+      </div>
+    </div>
+    
+    <div style="text-align: center;">
+      <button class="btn" onclick="startFullTest()" id="startFullBtn">▶ Запустить полную проверку сайтов</button>
+    </div>
+  </main>
+
+  <script>
+    // --- Тема ---
+    const theme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+    }
+
+    // --- PWA и Service Worker ---
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js');
+    }
+
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('btnInstall').style.display = 'inline-flex';
+    });
+
+    document.getElementById('btnInstall').addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          document.getElementById('btnInstall').style.display = 'none';
+        }
+        deferredPrompt = null;
+      }
+    });
+
+    async function forceAppUpdate() {
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+      }
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.update();
+      }
+      window.location.reload(true);
+    }
+
+    // --- Логика сетевых тестов ---
+    const TIMEOUT_MS = 5000;
+    const DELAY_BETWEEN_TESTS_MS = 500;
+
+    const delay = ms => new Promise(res => setTimeout(res, ms));
+
+    // Проверка доступности домена через fetch с no-cors
+    async function pingDomain(domain) {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), TIMEOUT_MS);
+      try {
+        await fetch(`https://${domain}/`, {
+          mode: 'no-cors',
+          cache: 'no-store',
+          signal: controller.signal
+        });
+        clearTimeout(id);
+        return true;
+      } catch (e) {
+        clearTimeout(id);
+        return false;
+      }
+    }
+
+    function setStatus(elementId, isChecking, isUp) {
+      const el = document.getElementById(elementId);
+      if (!el) return;
+      if (isChecking) {
+        el.innerText = '🔄';
+        el.classList.add('loading');
+      } else {
+        el.classList.remove('loading');
+        el.innerText = isUp ? '✅' : '❌';
+      }
+    }
+
+    // --- Блок 1 и 2: Инициализация при загрузке ---
+    async function runQuickTests() {
+      // 1. Google (Интернет)
+      setStatus('t-google', true);
+      const isInternet = await pingDomain('google.com');
+      setStatus('t-google', false, isInternet);
+
+      // 2. Telegram / YouTube
+      setStatus('t-tg', true); setStatus('t-yt', true);
+      const isTg = await pingDomain('t.me');
+      setStatus('t-tg', false, isTg);
+      const isYt = await pingDomain('youtube.com');
+      setStatus('t-yt', false, isYt);
+
+      const verdictEl = document.getElementById('vpn-verdict');
+      if (!isInternet) {
+        verdictEl.innerText = "❌ Нет доступа в интернет";
+        verdictEl.style.color = "var(--danger)";
+      } else if (isTg && isYt) {
+        verdictEl.innerText = "✅ Интернет есть, ВПН РАБОТАЕТ";
+        verdictEl.style.color = "var(--success)";
+      } else {
+        verdictEl.innerText = "⚠️ Интернет есть, ВПН ОТКЛЮЧЕН (или не работает)";
+        verdictEl.style.color = "var(--warn-text)";
+      }
+
+      // Блок 2
+      setStatus('t-white', true);
+      const isWhite = await pingDomain('ya.ru');
+      setStatus('t-white', false, isWhite);
+
+      setStatus('t-black', true);
+      const isBlack = await pingDomain('rutracker.org');
+      setStatus('t-black', false, isBlack);
+    }
+
+    async function checkCustomUrl() {
+      let url = document.getElementById('customUrl').value.trim();
+      if (!url) return;
+      url = url.replace(/^https?:\/\//, '').split('/')[0]; // Чистим домен
+      
+      const resRow = document.getElementById('custom-result');
+      resRow.style.display = 'flex';
+      document.getElementById('custom-name').innerText = `Проверка: ${url}`;
+      
+      setStatus('custom-status', true);
+      const isUp = await pingDomain(url);
+      setStatus('custom-status', false, isUp);
+    }
+
+    // --- Блок 3: Списки сайтов ---
+    const sites = {
+      ru: [
+        {name: 'ВК', domain: 'vk.com'}, {name: 'Яндекс', domain: 'ya.ru'}, 
+        {name: 'ВБ', domain: 'wildberries.ru'}, {name: 'Озон', domain: 'ozon.ru'}, 
+        {name: 'Сбер', domain: 'sberbank.ru'}, {name: 'Макс', domain: 'max.ru'}
+      ],
+      global: [
+        {name: 'Google', domain: 'google.com'}, {name: 'TikTok', domain: 'tiktok.com'},
+        {name: 'Pinterest', domain: 'pinterest.com'}, {name: 'Roblox', domain: 'roblox.com'},
+        {name: 'Discord', domain: 'discord.com'}, {name: 'Steam', domain: 'steampowered.com'}
+      ],
+      blocked: [
+        {name: 'Telegram', domain: 't.me'}, {name: 'YouTube', domain: 'youtube.com'},
+        {name: 'Instagram', domain: 'instagram.com'}, {name: 'WhatsApp', domain: 'whatsapp.com'}
+      ]
+    };
+
+    function renderSites() {
+      for (const [category, list] of Object.entries(sites)) {
+        const container = document.getElementById(`list-${category}`);
+        list.forEach((site, index) => {
+          container.innerHTML += `
+            <div class="test-row">
+              <span>${site.name}</span>
+              <span class="status" id="test-${category}-${index}">-</span>
+            </div>
+          `;
+        });
+      }
+    }
+
+    async function startFullTest() {
+      document.getElementById('startFullBtn').disabled = true;
+      document.getElementById('startFullBtn').innerText = '⏳ Проверка выполняется...';
+
+      // Проходимся по всем категориям и сайтам последовательно с интервалом
+      for (const [category, list] of Object.entries(sites)) {
+        for (let i = 0; i < list.length; i++) {
+          const elId = `test-${category}-${i}`;
+          setStatus(elId, true);
+          const isUp = await pingDomain(list[i].domain);
+          setStatus(elId, false, isUp);
+          await delay(DELAY_BETWEEN_TESTS_MS); // Пауза 0.5с перед следующим сайтом
+        }
+      }
+      
+      document.getElementById('startFullBtn').disabled = false;
+      document.getElementById('startFullBtn').innerText = '🔄 Повторить проверку';
+    }
+
+    // Запуск первичной прорисовки и быстрых тестов
+    renderSites();
+    runQuickTests();
+
+  </script>
+</body>
+</html>
