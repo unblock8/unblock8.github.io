@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Генератор одиночных конфигов</title>
+    <title>Генератор одиночных конфигов 2</title>
     <style>
         body { font-family: system-ui, -apple-system, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f5f5f5; color: #333; }
         .header { display: flex; align-items: center; margin-bottom: 20px; }
@@ -24,12 +24,12 @@
         <a href="index.html" class="btn btn-home">← Главная</a>
     </div>
 
-    <h2>Генератор одиночных конфигов с маршрутизацией</h2>
+    <h2>Генератор одиночных конфигов (Чистый парсинг ключа)</h2>
 
     <div class="config-block">
         <div class="form-group">
             <label>Вставьте ключи VLESS (каждый с новой строки):</label>
-            <textarea id="vless-textarea" placeholder="vless://...&#10;vless://...&#10;vless://..."></textarea>
+            <textarea id="vless-textarea" placeholder="vless://...&#10;vless://..."></textarea>
         </div>
     </div>
 
@@ -57,6 +57,7 @@
             "domain:nspk.ru", "domain:4meeting.me", "domain:flocktory.com", "domain:targetads.io", "domain:gen.xyz"
         ];
 
+        // Точный универсальный парсер параметров ссылки без навязывания дефолтов
         function parseVlessURL(url, tag) {
             try {
                 const parsed = new URL(url);
@@ -69,10 +70,14 @@
                 const params = new URLSearchParams(parsed.search);
                 const type = params.get('type') || 'tcp';
                 const security = params.get('security') || 'none';
-                const flow = params.get('flow') || '';
                 
-                // Достаем имя из хвоста ссылки (фрагмент #название), если есть
                 let name = parsed.hash ? decodeURIComponent(parsed.hash.substring(1)) : `Proxy-${tag}`;
+
+                const userObj = { id: uuid, encryption: "none" };
+                const flow = params.get('flow');
+                if (flow) {
+                    userObj.flow = flow; // Добавляем flow только если он реально задан в ключе
+                }
 
                 const outbound = {
                     tag: tag,
@@ -81,29 +86,40 @@
                         vnext: [{
                             address: address,
                             port: port,
-                            users: [{ id: uuid, encryption: "none", flow: flow }]
+                            users: [userObj]
                         }]
                     },
-                    streamSettings: { network: type, security: security }
+                    streamSettings: {
+                        network: type
+                    }
                 };
 
+                if (security !== 'none') {
+                    outbound.streamSettings.security = security;
+                }
+
+                // Перенос настроек безопасности (REALITY / TLS) строго из ключа
                 if (security === 'reality') {
-                    outbound.streamSettings.realitySettings = {
-                        publicKey: params.get('pbk') || '',
-                        serverName: params.get('sni') || '',
-                        shortId: params.get('sid') || '',
-                        fingerprint: params.get('fp') || 'chrome'
-                    };
+                    outbound.streamSettings.realitySettings = {};
+                    if (params.get('pbk')) outbound.streamSettings.realitySettings.publicKey = params.get('pbk');
+                    if (params.get('sni')) outbound.streamSettings.realitySettings.serverName = params.get('sni');
+                    if (params.get('sid')) outbound.streamSettings.realitySettings.shortId = params.get('sid');
+                    if (params.get('fp')) outbound.streamSettings.realitySettings.fingerprint = params.get('fp');
+                    if (params.get('spx')) outbound.streamSettings.realitySettings.spiderX = params.get('spx');
+                } else if (security === 'tls') {
+                    outbound.streamSettings.tlsSettings = {};
+                    if (params.get('sni')) outbound.streamSettings.tlsSettings.serverName = params.get('sni');
+                    if (params.get('fp')) outbound.streamSettings.tlsSettings.fingerprint = params.get('fp');
+                    if (params.get('alpn')) outbound.streamSettings.tlsSettings.alpn = params.get('alpn').split(',');
                 }
                 
+                // Транспортные настройки (WS / gRPC / TCP)
                 if (type === 'ws') {
                     outbound.streamSettings.wsSettings = {
                         path: params.get('path') || '/',
                         headers: { Host: params.get('host') || params.get('sni') || '' }
                     };
-                }
-                
-                if (type === 'grpc') {
+                } else if (type === 'grpc') {
                     outbound.streamSettings.grpcSettings = {
                         serviceName: params.get('serviceName') || '',
                         multiMode: params.get('mode') === 'multi'
@@ -112,6 +128,7 @@
 
                 return { outbound, name };
             } catch (e) {
+                console.error("Ошибка парсинга ключа:", e);
                 return null;
             }
         }
@@ -130,7 +147,7 @@
                     
                     if (parsedData) {
                         const singleConfig = {
-                            remarks: parsedData.name, // Имя профиля подтянется из ссылки или проставится автоматически
+                            remarks: parsedData.name,
                             log: { loglevel: "warning" },
                             inbounds: [
                                 {
@@ -171,7 +188,6 @@
                 return;
             }
 
-            // Скачиваем единый файл-подписку с отдельными конфигами
             const blob = new Blob([JSON.stringify(subscriptionArray, null, 2)], { type: "application/json" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
