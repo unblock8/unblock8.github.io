@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор одиночных конфигов</title>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f5f5f5; color: #333; }
+        .header { display: flex; align-items: center; margin-bottom: 20px; }
+        .btn { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: bold; transition: opacity 0.2s; }
+        .btn:hover { opacity: 0.8; }
+        .btn-home { background-color: #6c757d; color: white; text-decoration: none; display: inline-block; }
+        .btn-create { background-color: #28a745; color: white; width: 100%; margin-top: 20px; font-size: 16px; padding: 15px; }
+        
+        .config-block { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 500; }
+        textarea { width: 100%; height: 200px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: monospace; resize: vertical; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <a href="index.html" class="btn btn-home">← Главная</a>
+    </div>
+
+    <h2>Генератор одиночных конфигов с маршрутизацией</h2>
+
+    <div class="config-block">
+        <div class="form-group">
+            <label>Вставьте ключи VLESS (каждый с новой строки):</label>
+            <textarea id="vless-textarea" placeholder="vless://...&#10;vless://...&#10;vless://..."></textarea>
+        </div>
+    </div>
+
+    <button class="btn btn-create" id="create-btn">Создать JSON (Скачать подписку)</button>
+
+    <script>
+        const directDomains = [
+            "geosite:private", "geosite:category-ru", "domain:ru", "domain:ngenix.net", "domain:su", "domain:xn--p1ai", "domain:moscow",
+            "domain:vk.com", "domain:vk.cc", "domain:mycdn.me", "domain:my.com", "domain:my.games", "domain:yandex.net", "domain:yandex.com", "domain:ya.cc",
+            "domain:ozon.com", "domain:kaspersky.com", "domain:2gis.com", "domain:okko.tv", "domain:premier.one", "domain:uni.rest", "domain:рф",
+            "domain:ozon.by", "domain:ozon.kz", "domain:ozon.tm", "domain:ozon.com.by", "domain:ozon.com.kz", "domain:ozonru.me", "domain:ozonusercontent.com",
+            "domain:2gis.ae", "domain:2gis.am", "domain:2gis.az", "domain:2gis.by", "domain:2gis.com.cy", "domain:2gis.cz", "domain:2gis.ge", "domain:2gis.kg",
+            "domain:2gis.kz", "domain:2gis.tj", "domain:2gis.ua", "domain:2gis.uz", "domain:okko.sport", "domain:lenta.com", "domain:tbank-online.com",
+            "domain:tochka.com", "domain:tochka-tech.com", "domain:moex.com", "domain:paywb.com", "domain:avito.st", "domain:magnit.com", "domain:megamarket.tech",
+            "domain:fix-price.com", "domain:5post.market", "domain:edadeal.io", "domain:taxsee.com", "domain:whoosh.bike", "domain:timeweb.cloud", "domain:timeweb.com",
+            "domain:xn--90aifd0aza.site", "domain:bronevik.com", "domain:boosty.to", "domain:donationalerts.com", "domain:chizhik.club", "domain:okolo.app",
+            "domain:1internet.tv", "domain:1cfresh.com", "domain:yastatic.net", "domain:userapi.com", "domain:trbcdn.net", "domain:jivochat.com", "domain:jivosite.com",
+            "domain:adhigh.net", "domain:clstorage.net", "domain:alformacap.com", "domain:alformacapital.com", "domain:banka-ui.dev", "domain:beta-bank.com",
+            "domain:d5de4k0ri8jba7ucdbt6.apigw.yandexcloud.net", "domain:dbo-dengi.online", "domain:gazprombank.tech", "domain:investalfabank.com",
+            "domain:jsons.injector.3ebra.net", "domain:lmru.tech", "domain:magnit-ru.injector.3ebra.net", "domain:memealerts.com", "domain:miya-news.online",
+            "domain:netmonet.co", "domain:oversecure.org", "domain:russiacalling.com", "domain:sistema-capital.com", "domain:stats.vk-portal.net",
+            "domain:svoy.academy", "domain:tamtam.chat", "domain:tips.tips", "domain:tsx.x5static.net", "domain:windsurf.com", "domain:vulpine.email", "domain:x5.tech",
+            "domain:youla.io", "domain:zentotem.net", "regexp:.*\\.by$", "regexp:^(.+\\.)?yandex\\.(aero\vert{}az\vert{}by\vert{}cloud\vert{}co\\.il\vert{}com(\\.am\vert{}\\.ge\vert{}\\.ru\vert{}\\.tr\vert{}\\.ua)?\vert{}de\vert{}ee\vert{}eu\vert{}fi\vert{}fr\vert{}jobs\vert{}kg\vert{}kz\vert{}lt\vert{}lv\vert{}md\vert{}net\vert{}org\vert{}pl\vert{}ru\vert{}st\vert{}sx\vert{}tj\vert{}tm\vert{}tr\vert{}ua\vert{}uz)$",
+            "regexp:^alfa(-?[a-z]+)?\\.(ru|com|biz|st)$", "regexp:^vtb(-?[a-z0-9]+)?\\.(ru\vert{}com\vert{}in\vert{}digital\vert{}site\vert{}bank\\.in\vert{}fut\\.ru\vert{}corp\\.ru\vert{}promo)$",
+            "domain:nspk.ru", "domain:4meeting.me", "domain:flocktory.com", "domain:targetads.io", "domain:gen.xyz"
+        ];
+
+        function parseVlessURL(url, tag) {
+            try {
+                const parsed = new URL(url);
+                if (parsed.protocol !== 'vless:') return null;
+                
+                const uuid = parsed.username;
+                const address = parsed.hostname;
+                const port = parseInt(parsed.port) || 443;
+                
+                const params = new URLSearchParams(parsed.search);
+                const type = params.get('type') || 'tcp';
+                const security = params.get('security') || 'none';
+                const flow = params.get('flow') || '';
+                
+                // Достаем имя из хвоста ссылки (фрагмент #название), если есть
+                let name = parsed.hash ? decodeURIComponent(parsed.hash.substring(1)) : `Proxy-${tag}`;
+
+                const outbound = {
+                    tag: tag,
+                    protocol: "vless",
+                    settings: {
+                        vnext: [{
+                            address: address,
+                            port: port,
+                            users: [{ id: uuid, encryption: "none", flow: flow }]
+                        }]
+                    },
+                    streamSettings: { network: type, security: security }
+                };
+
+                if (security === 'reality') {
+                    outbound.streamSettings.realitySettings = {
+                        publicKey: params.get('pbk') || '',
+                        serverName: params.get('sni') || '',
+                        shortId: params.get('sid') || '',
+                        fingerprint: params.get('fp') || 'chrome'
+                    };
+                }
+                
+                if (type === 'ws') {
+                    outbound.streamSettings.wsSettings = {
+                        path: params.get('path') || '/',
+                        headers: { Host: params.get('host') || params.get('sni') || '' }
+                    };
+                }
+                
+                if (type === 'grpc') {
+                    outbound.streamSettings.grpcSettings = {
+                        serviceName: params.get('serviceName') || '',
+                        multiMode: params.get('mode') === 'multi'
+                    };
+                }
+
+                return { outbound, name };
+            } catch (e) {
+                return null;
+            }
+        }
+
+        document.getElementById('create-btn').addEventListener('click', () => {
+            const rawText = document.getElementById('vless-textarea').value;
+            const lines = rawText.split('\n');
+            const subscriptionArray = [];
+
+            let index = 1;
+            lines.forEach((line) => {
+                const url = line.trim();
+                if (url.startsWith('vless://')) {
+                    const tag = `proxy-node-${index}`;
+                    const parsedData = parseVlessURL(url, tag);
+                    
+                    if (parsedData) {
+                        const singleConfig = {
+                            remarks: parsedData.name, // Имя профиля подтянется из ссылки или проставится автоматически
+                            log: { loglevel: "warning" },
+                            inbounds: [
+                                {
+                                    listen: "127.0.0.1",
+                                    port: 10808,
+                                    protocol: "socks",
+                                    settings: { auth: "noauth", udp: true },
+                                    sniffing: { enabled: true, destOverride: ["http", "tls", "quic"] },
+                                    tag: "socks"
+                                }
+                            ],
+                            outbounds: [
+                                parsedData.outbound,
+                                { protocol: "freedom", tag: "direct" },
+                                { protocol: "blackhole", tag: "block" }
+                            ],
+                            routing: {
+                                domainMatcher: "hybrid",
+                                domainStrategy: "IPIfNonMatch",
+                                rules: [
+                                    { type: "field", protocol: ["bittorrent"], outboundTag: "block" },
+                                    { type: "field", domain: ["geosite:win-spy", "geosite:category-ads"], outboundTag: "block" },
+                                    { type: "field", ip: ["geoip:private", "geoip:ru"], outboundTag: "direct" },
+                                    { type: "field", domain: directDomains, outboundTag: "direct" },
+                                    { type: "field", network: "tcp,udp", outboundTag: tag }
+                                ]
+                            }
+                        };
+
+                        subscriptionArray.push(singleConfig);
+                        index++;
+                    }
+                }
+            });
+
+            if (subscriptionArray.length === 0) {
+                alert("Не найдено ни одного корректного VLESS ключа!");
+                return;
+            }
+
+            // Скачиваем единый файл-подписку с отдельными конфигами
+            const blob = new Blob([JSON.stringify(subscriptionArray, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "solo_subscription.json";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>
