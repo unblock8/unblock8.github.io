@@ -71,7 +71,7 @@
 
     <!-- Блок 3: Тест качества VPN (Пинг и Скорость) -->
     <div class="card">
-      <h2>⚡ Тест качества соединения (для VPN)</h2>
+      <h2>⚡ Тест качества соединения</h2>
       <p style="font-size: 13px; color: #6b7280; margin-bottom: 15px;">Помогает выявить медленные VPN-конфиги перед использованием.</p>
       
       <div class="info-row"><span class="info-label">Пинг (Задержка RTT)</span><span class="info-value" id="ping-val">—</span></div>
@@ -191,17 +191,17 @@
 
         // Итоговая оценка конфига
         if (rtt < 80 && mbps > 5) {
-          qualityEl.innerHTML = '<span style="color: var(--success);">🟢 Отличное (Быстрый VPN)</span>';
+          qualityEl.innerHTML = '<span style="color: var(--success);">🟢 Отличное</span>';
         } else if (rtt < 250 && mbps > 1) {
-          qualityEl.innerHTML = '<span style="color: var(--warning);">🟡 Среднее (Медленный конфиг)</span>';
+          qualityEl.innerHTML = '<span style="color: var(--warning);">🟡 Среднее</span>';
         } else {
-          qualityEl.innerHTML = '<span style="color: var(--danger);">🔴 Низкое качество (Лагает / Высокий пинг)</span>';
+          qualityEl.innerHTML = '<span style="color: var(--danger);">🔴 Низкое</span>';
         }
 
       } catch (e) {
         pingEl.innerText = 'Ошибка';
         speedEl.innerText = 'Ошибка';
-        qualityEl.innerHTML = '<span style="color: var(--danger);">❌ Ошибка (VPN не пропускает трафик)</span>';
+        qualityEl.innerHTML = '<span style="color: var(--danger);">❌ Ошибка (Нет соединения)</span>';
       } finally {
         btn.disabled = false;
       }
