@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NetCheck — Информация о сети</title>
+  <link rel="manifest" href="./manifest.json">
+  <style>
+    :root {
+      --bg: #f4f5f7; --text: #1f2937; --card: #ffffff; --border: #e5e7eb;
+      --primary: #3b82f6; --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --btn-text: #fff;
+    }
+    [data-theme="dark"] {
+      --bg: #111827; --text: #f9fafb; --card: #1f2937; --border: #374151;
+      --primary: #3b82f6;
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); padding-bottom: 50px; transition: background 0.3s, color 0.3s; }
+    
+    /* Шапка */
+    header { background: var(--card); border-bottom: 1px solid var(--border); padding: 12px 20px; position: sticky; top: 0; z-index: 100; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; }
+    .btn { background: var(--primary); color: var(--btn-text); border: none; padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: opacity 0.2s; }
+    .btn:hover { opacity: 0.9; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-icon { padding: 10px; font-size: 16px; }
+    
+    /* Основной контент */
+    main { max-width: 850px; margin: 25px auto; padding: 0 15px; display: flex; flex-direction: column; gap: 20px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
+    .card h2 { margin-bottom: 15px; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
+    
+    /* Строки информации */
+    .info-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { font-weight: 500; color: #6b7280; }
+    [data-theme="dark"] .info-label { color: #9ca3af; }
+    .info-value { font-weight: 600; text-align: right; }
+    
+    .loading { color: var(--primary); animation: pulse 1.2s infinite; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a href="index.html" class="btn btn-outline">🏠 На главную</a>
+    <button class="btn btn-outline btn-icon" onclick="toggleTheme()" title="Сменить тему">🌓</button>
+  </header>
+
+  <main>
+    <!-- Блок 1: IP и Геолокация -->
+    <div class="card">
+      <h2>🌐 Сетевые данные и геолокация</h2>
+      <div class="info-row"><span class="info-label">IP-адрес</span><span class="info-value" id="ip">Загрузка...</span></div>
+      <div class="info-row"><span class="info-label">Страна</span><span class="info-value" id="country">Загрузка...</span></div>
+      <div class="info-row"><span class="info-label">Город / Регион</span><span class="info-value" id="city">Загрузка...</span></div>
+      <div class="info-row"><span class="info-label">Провайдер (ISP / ASN)</span><span class="info-value" id="isp">Загрузка...</span></div>
+      <div class="info-row"><span class="info-label">Координаты (приблизительно)</span><span class="info-value" id="coords">Загрузка...</span></div>
+    </div>
+
+    <!-- Блок 2: Устройство и браузер -->
+    <div class="card">
+      <h2>💻 Устройство и браузер</h2>
+      <div class="info-row"><span class="info-label">Операционная система</span><span class="info-value" id="os">Определение...</span></div>
+      <div class="info-row"><span class="info-label">Браузер</span><span class="info-value" id="browser">Определение...</span></div>
+      <div class="info-row"><span class="info-label">Разрешение экрана</span><span class="info-value" id="screen">Определение...</span></div>
+      <div class="info-row"><span class="info-label">Язык системы</span><span class="info-value" id="lang">Определение...</span></div>
+      <div class="info-row"><span class="info-label">Тип соединения (API)</span><span class="info-value" id="net-type">Определение...</span></div>
+    </div>
+
+    <!-- Блок 3: Тест качества VPN (Пинг и Скорость) -->
+    <div class="card">
+      <h2>⚡ Тест качества соединения (для VPN)</h2>
+      <p style="font-size: 13px; color: #6b7280; margin-bottom: 15px;">Помогает выявить медленные VPN-конфиги перед использованием.</p>
+      
+      <div class="info-row"><span class="info-label">Пинг (Задержка RTT)</span><span class="info-value" id="ping-val">—</span></div>
+      <div class="info-row"><span class="info-label">Скорость загрузки</span><span class="info-value" id="speed-val">—</span></div>
+      <div class="info-row"><span class="info-label">Оценка качества VPN</span><span class="info-value" id="vpn-quality">—</span></div>
+
+      <div style="margin-top: 15px; text-align: center;">
+        <button class="btn" onclick="runVpnTest()" id="btn-vpn-test" style="width: 100%; max-width: 300px;">▶ Измерить скорость и пинг</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // --- Управление темой ---
+    const theme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+    }
+
+    // --- Загрузка геолокации и IP ---
+    async function loadGeoInfo() {
+      try {
+        const res = await fetch('https://ipapi.co/json/');
+        const data = await res.json();
+        document.getElementById('ip').innerText = data.ip || 'Недоступно';
+        document.getElementById('country').innerText = `${data.country_name || '—'} (${data.country_code || '—'})`;
+        document.getElementById('city').innerText = `${data.city || '—'}, ${data.region || '—'}`;
+        document.getElementById('isp').innerText = data.org || 'Недоступно';
+        document.getElementById('coords').innerText = (data.latitude && data.longitude) ? `${data.latitude}, ${data.longitude}` : 'Недоступно';
+      } catch (e) {
+        try {
+          // Фолбек на альтернативный API
+          const res2 = await fetch('https://ipwho.is/');
+          const data2 = await res2.json();
+          document.getElementById('ip').innerText = data2.ip || 'Недоступно';
+          document.getElementById('country').innerText = `${data2.country || '—'} (${data2.country_code || '—'})`;
+          document.getElementById('city').innerText = `${data2.city || '—'}, ${data2.region || '—'}`;
+          document.getElementById('isp').innerText = data2.connection?.isp || data2.connection?.org || 'Недоступно';
+          document.getElementById('coords').innerText = (data2.latitude && data2.longitude) ? `${data2.latitude}, ${data2.longitude}` : 'Недоступно';
+        } catch (err) {
+          document.getElementById('ip').innerText = 'Ошибка определения';
+          document.getElementById('country').innerText = '—';
+          document.getElementById('city').innerText = '—';
+          document.getElementById('isp').innerText = '—';
+          document.getElementById('coords').innerText = '—';
+        }
+      }
+    }
+
+    // --- Информация об устройстве ---
+    function loadDeviceInfo() {
+      document.getElementById('screen').innerText = `${window.screen.width} × ${window.screen.height} (Окно: ${window.innerWidth} × ${window.innerHeight})`;
+      document.getElementById('lang').innerText = navigator.language || navigator.userLanguage || '—';
+
+      const ua = navigator.userAgent;
+      let os = 'Неизвестно';
+      if (ua.includes('Win')) os = 'Windows';
+      else if (ua.includes('Mac')) os = 'macOS';
+      else if (ua.includes('Linux')) os = 'Linux';
+      else if (ua.includes('Android')) os = 'Android';
+      else if (ua.includes('like Mac') || ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS / iPadOS';
+      document.getElementById('os').innerText = os;
+
+      let browser = 'Неизвестный';
+      if (ua.includes('Firefox')) browser = 'Mozilla Firefox';
+      else if (ua.includes('SamsungBrowser')) browser = 'Samsung Internet';
+      else if (ua.includes('Opera') || ua.includes('OPR')) browser = 'Opera';
+      else if (ua.includes('Edge')) browser = 'Microsoft Edge';
+      else if (ua.includes('Chrome')) browser = 'Google Chrome';
+      else if (ua.includes('Safari')) browser = 'Safari';
+      document.getElementById('browser').innerText = browser;
+
+      if ('connection' in navigator) {
+        const conn = navigator.connection;
+        document.getElementById('net-type').innerText = `${conn.effectiveType ? conn.effectiveType.toUpperCase() : 'Активно'} (RTT: ${conn.rtt || '?'}мс)`;
+      } else {
+        document.getElementById('net-type').innerText = 'Не поддерживается';
+      }
+    }
+
+    // --- Тест пинга и скорости VPN ---
+    async function runVpnTest() {
+      const btn = document.getElementById('btn-vpn-test');
+      const pingEl = document.getElementById('ping-val');
+      const speedEl = document.getElementById('speed-val');
+      const qualityEl = document.getElementById('vpn-quality');
+
+      btn.disabled = true;
+      pingEl.innerHTML = '<span class="loading">Измерение пинга...</span>';
+      speedEl.innerHTML = '<span class="loading">Ожидание...</span>';
+      qualityEl.innerText = 'Анализ...';
+
+      const pingStart = performance.now();
+      try {
+        // Пинг до Cloudflare
+        await fetch('https://1.1.1.1/cdn-cgi/trace', { method: 'HEAD', mode: 'no-cors', cache: 'no-store' });
+        const pingEnd = performance.now();
+        const rtt = Math.round(pingEnd - pingStart);
+        pingEl.innerText = `${rtt} мс`;
+
+        // Тест скорости (скачивание файла с защитой от кэша)
+        speedEl.innerHTML = '<span class="loading">Замер скорости...</span>';
+        const speedStart = performance.now();
+        // Используем иконку приложения или любой небольшой файл из корня
+        const res = await fetch('./icon-192.png?t=' + Date.now(), { cache: 'no-store' });
+        const blob = await res.blob();
+        const speedEnd = performance.now();
+
+        const durationSec = (speedEnd - speedStart) / 1000;
+        const bits = blob.size * 8;
+        const mbps = ((bits / durationSec) / (1024 * 1024)).toFixed(2);
+        speedEl.innerText = `${mbps} Мбит/с`;
+
+        // Итоговая оценка конфига
+        if (rtt < 80 && mbps > 5) {
+          qualityEl.innerHTML = '<span style="color: var(--success);">🟢 Отличное (Быстрый VPN)</span>';
+        } else if (rtt < 250 && mbps > 1) {
+          qualityEl.innerHTML = '<span style="color: var(--warning);">🟡 Среднее (Медленный конфиг)</span>';
+        } else {
+          qualityEl.innerHTML = '<span style="color: var(--danger);">🔴 Низкое качество (Лагает / Высокий пинг)</span>';
+        }
+
+      } catch (e) {
+        pingEl.innerText = 'Ошибка';
+        speedEl.innerText = 'Ошибка';
+        qualityEl.innerHTML = '<span style="color: var(--danger);">❌ Ошибка (VPN не пропускает трафик)</span>';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // Инициализация
+    loadGeoInfo();
+    loadDeviceInfo();
+  </script>
+</body>
+</html>
