@@ -69,7 +69,7 @@
       <div class="info-row"><span class="info-label">Тип соединения (API)</span><span class="info-value" id="net-type">Определение...</span></div>
     </div>
 
-    <!-- Блок 3: Тест качества VPN (Пинг и Скорость) -->
+    <!-- Блок 3: Тест качества соединения (Пинг и Скорость) -->
     <div class="card">
       <h2>⚡ Тест качества соединения</h2>
       <p style="font-size: 13px; color: #6b7280; margin-bottom: 15px;">Помогает выявить медленные VPN-конфиги перед использованием.</p>
@@ -81,6 +81,29 @@
       <div style="margin-top: 15px; text-align: center;">
         <button class="btn" onclick="runVpnTest()" id="btn-vpn-test" style="width: 100%; max-width: 300px;">▶ Измерить скорость и пинг</button>
       </div>
+    </div>
+
+    <!-- Блок 4: Расстояние до VPN-узла (последний блок) -->
+    <div class="card">
+      <h2>📍 Расстояние до VPN-узла</h2>
+      <div class="info-row">
+        <span class="info-label">Ваш реальный город</span>
+        <span class="info-value">
+          <select id="real-city-select" onchange="updateDistance()" style="padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 13px;">
+            <option value="moscow">Москва</option>
+            <option value="spb">Санкт-Петербург</option>
+            <option value="ekat">Екатеринбург</option>
+            <option value="novosib">Новосибирск</option>
+            <option value="nnov">Нижний Новгород</option>
+            <option value="kazan">Казань</option>
+            <option value="kirov">Киров</option>
+            <option value="yola">Йошкар-Ола</option>
+            <option value="cheboksary">Чебоксары</option>
+          </select>
+        </span>
+      </div>
+      <div class="info-row"><span class="info-label">Текущая точка VPN (ДЦ)</span><span class="info-value" id="vpn-target-loc">Загрузка...</span></div>
+      <div class="info-row"><span class="info-label">Расстояние</span><span class="info-value" id="real-distance-calc" style="font-weight: 700; color: var(--primary);">—</span></div>
     </div>
   </main>
 
@@ -95,6 +118,45 @@
       localStorage.setItem('theme', next);
     }
 
+    // --- Координаты городов для расчета расстояния ---
+    const citiesData = {
+      "moscow": { name: "Москва", lat: 55.7558, lon: 37.6173 },
+      "spb": { name: "Санкт-Петербург", lat: 59.9343, lon: 30.3351 },
+      "ekat": { name: "Екатеринбург", lat: 56.8389, lon: 60.6057 },
+      "novosib": { name: "Новосибирск", lat: 55.0084, lon: 82.9357 },
+      "nnov": { name: "Нижний Новгород", lat: 56.3269, lon: 44.0059 },
+      "kazan": { name: "Казань", lat: 55.7887, lon: 49.1221 },
+      "kirov": { name: "Киров", lat: 58.5966, lon: 49.6601 },
+      "yola": { name: "Йошкар-Ола", lat: 56.6353, lon: 47.8988 },
+      "cheboksary": { name: "Чебоксары", lat: 56.1322, lon: 47.2519 }
+    };
+
+    let currentVpnLat = null;
+    let currentVpnLon = null;
+
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return Math.round(R * c);
+    }
+
+    function updateDistance() {
+      if (currentVpnLat === null || currentVpnLon === null) return;
+      const selectEl = document.getElementById('real-city-select');
+      const selectedKey = selectEl.value;
+      const city = citiesData[selectedKey];
+      if (!city) return;
+
+      const dist = calculateDistance(city.lat, city.lon, currentVpnLat, currentVpnLon);
+      document.getElementById('real-distance-calc').innerText = `~${dist} км (от г. ${city.name})`;
+    }
+
     // --- Загрузка геолокации и IP ---
     async function loadGeoInfo() {
       try {
@@ -105,9 +167,17 @@
         document.getElementById('city').innerText = `${data.city || '—'}, ${data.region || '—'}`;
         document.getElementById('isp').innerText = data.org || 'Недоступно';
         document.getElementById('coords').innerText = (data.latitude && data.longitude) ? `${data.latitude}, ${data.longitude}` : 'Недоступно';
+        
+        if (data.latitude && data.longitude) {
+          currentVpnLat = data.latitude;
+          currentVpnLon = data.longitude;
+          document.getElementById('vpn-target-loc').innerText = `${data.city || 'Неизвестно'}, ${data.country_name || ''} (${currentVpnLat}, ${currentVpnLon})`;
+          updateDistance();
+        } else {
+          document.getElementById('vpn-target-loc').innerText = 'Координаты недоступны';
+        }
       } catch (e) {
         try {
-          // Фолбек на альтернативный API
           const res2 = await fetch('https://ipwho.is/');
           const data2 = await res2.json();
           document.getElementById('ip').innerText = data2.ip || 'Недоступно';
@@ -115,12 +185,22 @@
           document.getElementById('city').innerText = `${data2.city || '—'}, ${data2.region || '—'}`;
           document.getElementById('isp').innerText = data2.connection?.isp || data2.connection?.org || 'Недоступно';
           document.getElementById('coords').innerText = (data2.latitude && data2.longitude) ? `${data2.latitude}, ${data2.longitude}` : 'Недоступно';
+
+          if (data2.latitude && data2.longitude) {
+            currentVpnLat = data2.latitude;
+            currentVpnLon = data2.longitude;
+            document.getElementById('vpn-target-loc').innerText = `${data2.city || 'Неизвестно'}, ${data2.country || ''} (${currentVpnLat}, ${currentVpnLon})`;
+            updateDistance();
+          } else {
+            document.getElementById('vpn-target-loc').innerText = 'Координаты недоступны';
+          }
         } catch (err) {
           document.getElementById('ip').innerText = 'Ошибка определения';
           document.getElementById('country').innerText = '—';
           document.getElementById('city').innerText = '—';
           document.getElementById('isp').innerText = '—';
           document.getElementById('coords').innerText = '—';
+          document.getElementById('vpn-target-loc').innerText = 'Ошибка';
         }
       }
     }
@@ -156,7 +236,7 @@
       }
     }
 
-    // --- Тест пинга и скорости VPN ---
+    // --- Точный тест скорости и пинга через эндпоинт Cloudflare (2 МБ) ---
     async function runVpnTest() {
       const btn = document.getElementById('btn-vpn-test');
       const pingEl = document.getElementById('ping-val');
@@ -170,17 +250,19 @@
 
       const pingStart = performance.now();
       try {
-        // Пинг до Cloudflare
         await fetch('https://1.1.1.1/cdn-cgi/trace', { method: 'HEAD', mode: 'no-cors', cache: 'no-store' });
         const pingEnd = performance.now();
         const rtt = Math.round(pingEnd - pingStart);
         pingEl.innerText = `${rtt} мс`;
 
-        // Тест скорости (скачивание файла с защитой от кэша)
         speedEl.innerHTML = '<span class="loading">Замер скорости...</span>';
         const speedStart = performance.now();
-        // Используем иконку приложения или любой небольшой файл из корня
-        const res = await fetch('./icon-192.png?t=' + Date.now(), { cache: 'no-store' });
+        
+        // Скачиваем 2 МБ с публичного CDN Cloudflare с защитой от кэша
+        const res = await fetch('https://speed.cloudflare.com/__down?bytes=2000000&t=' + Date.now(), { 
+          mode: 'cors', 
+          cache: 'no-store' 
+        });
         const blob = await res.blob();
         const speedEnd = performance.now();
 
@@ -189,7 +271,6 @@
         const mbps = ((bits / durationSec) / (1024 * 1024)).toFixed(2);
         speedEl.innerText = `${mbps} Мбит/с`;
 
-        // Итоговая оценка конфига
         if (rtt < 80 && mbps > 5) {
           qualityEl.innerHTML = '<span style="color: var(--success);">🟢 Отличное</span>';
         } else if (rtt < 250 && mbps > 1) {
