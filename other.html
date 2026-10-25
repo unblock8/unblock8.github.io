@@ -11,11 +11,13 @@
       --bg: #f4f5f7; --text: #1f2937; --card: #ffffff; --border: #e5e7eb;
       --primary: #3b82f6; --warn-bg: #fffbeb; --warn-text: #92400e;
       --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --orange: #f97316; --btn-text: #fff;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     }
     [data-theme="dark"] {
       --bg: #111827; --text: #f9fafb; --card: #1f2937; --border: #374151;
       --primary: #3b82f6; --warn-bg: #422006; --warn-text: #fef3c7;
       --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --orange: #f97316;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
     }
     
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -32,18 +34,60 @@
     }
 
     /* Шапка */
-    header { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 20px; position: sticky; top: 15px; z-index: 100; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
+    header { 
+      background: var(--card); 
+      border: 1px solid var(--border); 
+      border-radius: 12px; 
+      padding: 12px 20px; 
+      position: sticky; 
+      top: 15px; 
+      z-index: 100; 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      box-shadow: var(--shadow); 
+    }
     .logo { font-size: 1.25rem; font-weight: 700; color: var(--text); }
     .header-actions { display: flex; align-items: center; gap: 8px; }
     
-    .btn { background: var(--primary); color: var(--btn-text); border: none; padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: opacity 0.2s, background 0.2s; }
+    .btn { 
+      background: var(--primary); 
+      color: var(--btn-text); 
+      border: none; 
+      padding: 10px 16px; 
+      border-radius: 8px; 
+      font-weight: 600; 
+      cursor: pointer; 
+      text-decoration: none; 
+      font-size: 14px; 
+      display: inline-flex; 
+      align-items: center; 
+      justify-content: center; 
+      gap: 6px; 
+      transition: opacity 0.2s, background 0.2s; 
+    }
     .btn:hover { opacity: 0.9; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
-    .btn-icon { padding: 10px; font-size: 16px; }
+    
+    /* Принудительно квадратные кнопки с иконками */
+    .btn-square { 
+      width: 40px; 
+      height: 40px; 
+      padding: 0; 
+      border-radius: 8px; 
+      font-size: 16px; 
+      flex-shrink: 0; 
+    }
     
     /* Основной контент */
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
+    .card { 
+      background: var(--card); 
+      border: 1px solid var(--border); 
+      border-radius: 12px; 
+      padding: 20px; 
+      box-shadow: var(--shadow); 
+    }
     .card h2 { margin-bottom: 15px; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
     
     /* Блок 1: Сетка 2х2 и кнопка 2/5 ширины */
@@ -70,7 +114,7 @@
     .custom-results { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
 
     /* Предупреждение */
-    .warning { background: var(--warn-bg); color: var(--warn-text); padding: 12px; border-radius: 12px; font-weight: 600; text-align: center; border: 1px solid #fcd34d; font-size: 14px; }
+    .warning { background: var(--warn-bg); color: var(--warn-text); padding: 12px; border-radius: 12px; font-weight: 600; text-align: center; border: 1px solid #fcd34d; font-size: 14px; box-shadow: var(--shadow); }
     
     /* Футер */
     footer { text-align: center; font-size: 12px; color: #6b7280; margin-top: 10px; line-height: 1.5; }
@@ -94,8 +138,8 @@
       <div class="logo">NetCheck</div>
       <div class="header-actions">
         <button class="btn" id="btnInstall" style="display: none;">📱 Установить</button>
-        <a href="ipconf.html" class="btn btn-outline btn-icon" title="Информация о сети">🌐</a>
-        <button class="btn btn-outline btn-icon" onclick="toggleDrawer()" title="Меню">☰</button>
+        <a href="ipconf.html" class="btn btn-outline btn-square" title="Информация о сети">🌐</a>
+        <button class="btn btn-outline btn-square" onclick="toggleDrawer()" title="Меню">☰</button>
       </div>
     </header>
 
@@ -110,7 +154,7 @@
             <div class="capsule" id="cap-yt"><span>YouTube</span><span class="icon">⚪</span></div>
             <div class="capsule" id="cap-tg"><span>Telegram</span><span class="icon">⚪</span></div>
           </div>
-          <button class="btn btn-run-block" onclick="runBlock1()" id="btn-block1">▶ Запустить</button>
+          <button class="btn btn-run-block" onclick="runBlockingTest()" id="btn-block1">▶ Запустить</button>
         </div>
         <div class="status-output" id="out-block1">Итоги теста</div>
       </div>
@@ -131,7 +175,7 @@
       <!-- Футер -->
       <footer>
         deampat &bull; github &bull; 2026<br>
-        NetCheck v25.10.1
+        NetCheck v25.10.3
       </footer>
     </main>
   </div>
@@ -140,9 +184,9 @@
   <div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
   <div class="drawer" id="drawer">
     <div class="drawer-top-row">
-      <button class="btn btn-outline btn-icon" onclick="toggleTheme()" title="Сменить тему">🌓</button>
-      <button class="btn btn-outline btn-icon" onclick="forceAppUpdate()" title="Принудительная перезагрузка">🔄</button>
-      <button class="btn btn-outline btn-icon" onclick="toggleDrawer()" title="Закрыть">✕</button>
+      <button class="btn btn-outline btn-square" onclick="toggleTheme()" title="Сменить тему">🌓</button>
+      <button class="btn btn-outline btn-square" onclick="forceAppUpdate()" title="Принудительная перезагрузка">🔄</button>
+      <button class="btn btn-outline btn-square" onclick="toggleDrawer()" title="Закрыть">✕</button>
     </div>
     <a href="site1.html" class="drawer-btn">Кнопка 1</a>
     <a href="site1.html" class="drawer-btn">Кнопка 2</a>
@@ -271,67 +315,74 @@
       out.style.color = 'var(--text)';
       out.style.borderColor = 'var(--border)';
 
-      // Сбрасываем Яндекс в нейтральное положение перед началом теста
-      setCapsuleState('cap-ya', 'default');
-      setCapsuleState('cap-google', 'testing');
-      setCapsuleState('cap-yt', 'testing');
-      setCapsuleState('cap-tg', 'testing');
+      try {
+        // Сбрасываем Яндекс в нейтральное положение перед началом теста
+        setCapsuleState('cap-ya', 'default');
+        setCapsuleState('cap-google', 'testing');
+        setCapsuleState('cap-yt', 'testing');
+        setCapsuleState('cap-tg', 'testing');
 
-      // Одновременный запуск Google, Telegram, YouTube (таймаут 5с)
-      const [google, yt, tg] = await Promise.all([
-        pingDomain('google.com'),
-        pingDomain('youtube.com'),
-        pingDomain('t.me')
-      ]);
+        // Одновременный запуск Google, Telegram, YouTube (таймаут 5с)
+        const [google, yt, tg] = await Promise.all([
+          pingDomain('google.com'),
+          pingDomain('youtube.com'),
+          pingDomain('t.me')
+        ]);
 
-      setCapsuleState('cap-google', google ? 'success' : 'danger');
-      setCapsuleState('cap-yt', yt ? 'success' : 'danger');
-      setCapsuleState('cap-tg', tg ? 'success' : 'danger');
+        setCapsuleState('cap-google', google ? 'success' : 'danger');
+        setCapsuleState('cap-yt', yt ? 'success' : 'danger');
+        setCapsuleState('cap-tg', tg ? 'success' : 'danger');
 
-      let conclusion = '';
-      let resultBg = 'var(--bg)';
-      let resultColor = 'var(--text)';
-      let resultBorder = 'var(--border)';
+        let conclusion = '';
+        let resultBg = 'var(--bg)';
+        let resultColor = 'var(--text)';
+        let resultBorder = 'var(--border)';
 
-      if (!google && !tg && !yt) {
-        // Ни один из трех не работает — проверяем Яндекс
-        setCapsuleState('cap-ya', 'testing');
-        const ya = await pingDomain('ya.ru');
-        setCapsuleState('cap-ya', ya ? 'success' : 'danger');
+        if (!google && !tg && !yt) {
+          // Ни один из трех не работает — проверяем Яндекс
+          setCapsuleState('cap-ya', 'testing');
+          const ya = await pingDomain('ya.ru');
+          setCapsuleState('cap-ya', ya ? 'success' : 'danger');
 
-        if (ya) {
-          conclusion = 'Белые списки';
-          resultBg = 'var(--orange)';
+          if (ya) {
+            conclusion = 'Белые списки';
+            resultBg = 'var(--orange)';
+            resultColor = '#ffffff';
+            resultBorder = 'var(--orange)';
+          } else {
+            conclusion = 'Нет соединения';
+            resultBg = 'var(--danger)';
+            resultColor = '#ffffff';
+            resultBorder = 'var(--danger)';
+          }
+        } else if (google && !tg && !yt) {
+          conclusion = 'Черные списки';
+          resultBg = 'var(--warning)';
           resultColor = '#ffffff';
-          resultBorder = 'var(--orange)';
+          resultBorder = 'var(--warning)';
+        } else if (google && tg && yt) {
+          conclusion = 'ВПН работает';
+          resultBg = 'var(--success)';
+          resultColor = '#ffffff';
+          resultBorder = 'var(--success)';
         } else {
-          conclusion = 'Нет соединения';
-          resultBg = 'var(--danger)';
+          conclusion = 'Возможна умная маршрутизация';
+          resultBg = 'var(--warning)';
           resultColor = '#ffffff';
-          resultBorder = 'var(--danger)';
+          resultBorder = 'var(--warning)';
         }
-      } else if (google && !tg && !yt) {
-        conclusion = 'Черные списки';
-        resultBg = 'var(--warning)';
-        resultColor = '#ffffff';
-        resultBorder = 'var(--warning)';
-      } else if (google && tg && yt) {
-        conclusion = 'ВПН работает';
-        resultBg = 'var(--success)';
-        resultColor = '#ffffff';
-        resultBorder = 'var(--success)';
-      } else {
-        conclusion = 'Возможна умная маршрутизация';
-        resultBg = 'var(--warning)';
-        resultColor = '#ffffff';
-        resultBorder = 'var(--warning)';
-      }
 
-      out.innerText = conclusion;
-      out.style.background = resultBg;
-      out.style.color = resultColor;
-      out.style.borderColor = resultBorder;
-      btn.disabled = false;
+        out.innerText = conclusion;
+        out.style.background = resultBg;
+        out.style.color = resultColor;
+        out.style.borderColor = resultBorder;
+      } catch (e) {
+        out.innerText = 'Ошибка выполнения теста';
+        out.style.background = 'var(--danger)';
+        out.style.color = '#ffffff';
+      } finally {
+        btn.disabled = false;
+      }
     }
 
     // --- Блок 2: Проверка пользовательских сайтов (1 сайт в секунду, таймаут 5с) ---
@@ -346,33 +397,35 @@
       const rawSites = input.split(/[\s\n]+/).filter(s => s.length > 0);
       btn.disabled = true;
 
-      for (let i = 0; i < rawSites.length; i++) {
-        const site = rawSites[i].replace(/^https?:\/\//, '').split('/')[0];
-        
-        const capsule = document.createElement('div');
-        capsule.className = 'capsule testing';
-        capsule.style.flex = '1 1 calc(50% - 8px)';
-        capsule.style.justifyContent = 'space-between';
-        capsule.innerHTML = `<span>${site}</span><span class="icon">🔄</span>`;
-        container.appendChild(capsule);
+      try {
+        for (let i = 0; i < rawSites.length; i++) {
+          const site = rawSites[i].replace(/^https?:\/\//, '').split('/')[0];
+          
+          const capsule = document.createElement('div');
+          capsule.className = 'capsule testing';
+          capsule.style.flex = '1 1 calc(50% - 8px)';
+          capsule.style.justifyContent = 'space-between';
+          capsule.innerHTML = `<span>${site}</span><span class="icon">🔄</span>`;
+          container.appendChild(capsule);
 
-        const isUp = await pingDomain(site);
-        
-        capsule.classList.remove('testing');
-        if (isUp) {
-          capsule.classList.add('success');
-          capsule.querySelector('.icon').innerText = '✅';
-        } else {
-          capsule.classList.add('danger');
-          capsule.querySelector('.icon').innerText = '❌';
-        }
+          const isUp = await pingDomain(site);
+          
+          capsule.classList.remove('testing');
+          if (isUp) {
+            capsule.classList.add('success');
+            capsule.querySelector('.icon').innerText = '✅';
+          } else {
+            capsule.classList.add('danger');
+            capsule.querySelector('.icon').innerText = '❌';
+          }
 
-        if (i < rawSites.length - 1) {
-          await delay(1000); // 1 сайт в одну секунду
+          if (i < rawSites.length - 1) {
+            await delay(1000); // 1 сайт в одну секунду
+          }
         }
+      } finally {
+        btn.disabled = false;
       }
-
-      btn.disabled = false;
     }
   </script>
 </body>
