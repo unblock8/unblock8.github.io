@@ -3,40 +3,100 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Сетевой Монитор</title>
+  <meta name="theme-color" content="#f4f5f7">
+  <title>NetCheck</title>
   <link rel="manifest" href="./manifest.json">
   <style>
     :root {
       --bg: #f4f5f7; --text: #1f2937; --card: #ffffff; --border: #e5e7eb;
       --primary: #3b82f6; --warn-bg: #fffbeb; --warn-text: #92400e;
-      --success: #10b981; --danger: #ef4444; --btn-text: #fff;
+      --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --orange: #f97316; --btn-text: #fff;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     }
     [data-theme="dark"] {
       --bg: #111827; --text: #f9fafb; --card: #1f2937; --border: #374151;
       --primary: #3b82f6; --warn-bg: #422006; --warn-text: #fef3c7;
+      --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --orange: #f97316;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
     }
     
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); padding-bottom: 50px; transition: background 0.3s, color 0.3s; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); padding-bottom: 50px; transition: background 0.3s, color 0.3s; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
     
+    .container {
+      width: 100%;
+      max-width: 900px;
+      margin: 25px auto;
+      padding: 0 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
     /* Шапка */
-    header { background: var(--card); border-bottom: 1px solid var(--border); padding: 12px 20px; position: sticky; top: 0; z-index: 100; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; }
-    .btn { background: var(--primary); color: var(--btn-text); border: none; padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: opacity 0.2s, background 0.2s; }
+    header { 
+      background: var(--card); 
+      border: 1px solid var(--border); 
+      border-radius: 12px; 
+      padding: 12px 20px; 
+      position: sticky; 
+      top: 15px; 
+      z-index: 100; 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      box-shadow: var(--shadow); 
+    }
+    .logo { font-size: 1.25rem; font-weight: 700; color: var(--text); }
+    .header-actions { display: flex; align-items: center; gap: 8px; }
+    
+    .btn { 
+      background: var(--primary); 
+      color: var(--btn-text); 
+      border: none; 
+      padding: 10px 16px; 
+      border-radius: 8px; 
+      font-weight: 600; 
+      cursor: pointer; 
+      text-decoration: none; 
+      font-size: 14px; 
+      display: inline-flex; 
+      align-items: center; 
+      justify-content: center; 
+      gap: 6px; 
+      transition: opacity 0.2s, background 0.2s; 
+    }
     .btn:hover { opacity: 0.9; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
-    .btn-icon { padding: 10px; font-size: 16px; }
+    
+    /* Принудительно квадратные кнопки с иконками */
+    .btn-square { 
+      width: 40px; 
+      height: 40px; 
+      padding: 0; 
+      border-radius: 8px; 
+      font-size: 16px; 
+      flex-shrink: 0; 
+    }
     
     /* Основной контент */
-    main { max-width: 900px; margin: 25px auto; padding: 0 15px; display: flex; flex-direction: column; gap: 20px; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
+    .card { 
+      background: var(--card); 
+      border: 1px solid var(--border); 
+      border-radius: 12px; 
+      padding: 20px; 
+      box-shadow: var(--shadow); 
+    }
     .card h2 { margin-bottom: 15px; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
     
-    /* Капсулы */
-    .capsules-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
+    /* Блок 1: Сетка 2х2 и кнопка 2/5 ширины */
+    .block1-layout { display: flex; gap: 15px; align-items: stretch; margin-bottom: 15px; }
+    .capsules-grid { flex: 3; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .capsule {
-      padding: 8px 16px; border-radius: 20px; border: 2px solid var(--border);
+      padding: 10px 14px; border-radius: 20px; border: 2px solid var(--border);
       background: var(--card); color: var(--text); font-weight: 500; font-size: 14px;
-      display: inline-flex; align-items: center; gap: 6px; transition: all 0.3s ease;
+      display: inline-flex; align-items: center; justify-content: space-between; gap: 6px; transition: all 0.3s ease;
     }
     .capsule.testing { border-color: var(--primary); color: var(--primary); animation: pulse 1.2s infinite; }
     .capsule.success { border-color: var(--success); color: #047857; background: rgba(16, 185, 129, 0.12); }
@@ -44,120 +104,132 @@
     [data-theme="dark"] .capsule.success { color: #6ee7b7; }
     [data-theme="dark"] .capsule.danger { color: #fca5a5; }
 
-    /* Поля вывода статуса и кнопок */
-    .row-flex { display: flex; gap: 10px; align-items: center; margin-top: 10px; }
-    .status-output { flex: 1; padding: 10px 14px; border-radius: 8px; font-weight: 600; font-size: 14px; background: var(--bg); border: 1px solid var(--border); color: var(--text); transition: all 0.3s; }
-    .status-output.red { background: rgba(239, 68, 68, 0.15); color: #dc2626; border-color: #fca5a5; }
-    .status-output.yellow { background: rgba(245, 158, 11, 0.15); color: #d97706; border-color: #fde68a; }
-    .status-output.green { background: rgba(16, 185, 129, 0.15); color: #059669; border-color: #6ee7b7; }
+    .btn-run-block { flex: 2; height: auto; font-size: 14px; font-weight: 600; border-radius: 8px; }
+
+    /* Поля вывода статуса */
+    .status-output { width: 100%; padding: 12px 14px; border-radius: 8px; font-weight: 600; font-size: 14px; background: var(--bg); border: 1px solid var(--border); color: var(--text); text-align: center; transition: all 0.3s; }
     
-    /* Инпуты */
-    .input-group { display: flex; gap: 10px; margin-top: 15px; }
-    .input-group input { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); outline: none; }
-    
+    /* Инпуты для блока сайтов */
+    textarea { width: 100%; height: 90px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 14px; resize: vertical; margin-bottom: 12px; outline: none; }
+    .custom-results { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
+
     /* Предупреждение */
-    .warning { background: var(--warn-bg); color: var(--warn-text); padding: 12px; border-radius: 8px; font-weight: 600; text-align: center; border: 1px solid #fcd34d; font-size: 14px; }
+    .warning { background: var(--warn-bg); color: var(--warn-text); padding: 12px; border-radius: 12px; font-weight: 600; text-align: center; border: 1px solid #fcd34d; font-size: 14px; box-shadow: var(--shadow); }
     
-    /* Сетка 3 столбца */
-    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-bottom: 15px; }
-    .column-title { font-weight: 600; margin-bottom: 10px; font-size: 0.95rem; display: flex; align-items: center; gap: 6px; }
-    .column-list { display: flex; flex-direction: column; gap: 8px; }
-    .column-list .capsule { width: 100%; justify-content: space-between; border-radius: 10px; padding: 8px 12px; }
+    /* Футер */
+    footer { text-align: center; font-size: 12px; color: #6b7280; margin-top: 10px; line-height: 1.5; }
+
+    /* Боковая панель (меню) */
+    .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 999; display: none; opacity: 0; transition: opacity 0.3s; }
+    .drawer { position: fixed; top: 0; right: -300px; width: 300px; height: 100%; background: var(--card); border-left: 1px solid var(--border); z-index: 1000; padding: 20px; display: flex; flex-direction: column; gap: 15px; transition: right 0.3s ease; box-shadow: -5px 0 15px rgba(0,0,0,0.2); }
+    .drawer.open { right: 0; }
+    .drawer-top-row { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+    .drawer-btn { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 8px; text-align: center; font-weight: 600; text-decoration: none; font-size: 14px; display: block; transition: opacity 0.2s; }
+    .drawer-btn:hover { opacity: 0.8; }
 
     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
   </style>
 </head>
 <body>
 
-  <header>
-    <button class="btn" id="btnInstall" style="display: none;">📱 Приложение</button>
-    <a href="ipconf.html" class="btn btn-outline">🌐 Инфо. сети</a>
-    <a href="other.html" class="btn btn-outline">📂 Тест</a>
-    <button class="btn btn-outline btn-icon" onclick="forceAppUpdate()" title="Перезагрузить сайт">🔄</button>
-    <button class="btn btn-outline btn-icon" onclick="toggleTheme()" title="Сменить тему">🌓</button>
-  </header>
+  <div class="container">
+    <!-- Шапка -->
+    <header>
+      <div class="logo">NetCheck</div>
+      <div class="header-actions">
+        <button class="btn" id="btnInstall" style="display: none;">📱 Установить</button>
+        <a href="ipconf.html" class="btn btn-outline btn-square" title="Информация о сети">🌐</a>
+        <button class="btn btn-outline btn-square" onclick="toggleDrawer()" title="Меню">☰</button>
+      </div>
+    </header>
 
-  <main>
-    <!-- Блок 1: Быстрый тест интернета и VPN -->
-    <div class="card">
-      <h2>🚀 Быстрый тест интернета</h2>
-      <div class="capsules-row">
-        <div class="capsule" id="cap-google">Google <span class="icon">⚪</span></div>
-        <div class="capsule" id="cap-tg">Telegram <span class="icon">⚪</span></div>
-        <div class="capsule" id="cap-yt">YouTube <span class="icon">⚪</span></div>
-      </div>
-      
-      <div class="row-flex">
-        <div class="status-output" id="out-block1">Ожидание запуска проверки...</div>
-        <button class="btn" onclick="runBlock1()" id="btn-block1">▶ Старт</button>
-      </div>
-
-      <div class="input-group">
-        <input type="text" id="customUrl" placeholder="Введите домен (например, netflix.com)">
-        <button class="btn" onclick="checkCustomUrl()" id="btn-custom">Проверить</button>
-      </div>
-      <div class="row-flex" id="custom-result" style="display:none;">
-        <div class="capsule" id="cap-custom" style="width: 100%; justify-content: space-between;">
-          <span id="custom-name"></span><span class="icon">⚪</span>
+    <main style="display: flex; flex-direction: column; gap: 20px;">
+      <!-- Блок 1: Проверка интернет блокировок -->
+      <div class="card">
+        <h2>🛡️ Проверка интернет блокировок</h2>
+        <div class="block1-layout">
+          <div class="capsules-grid">
+            <div class="capsule" id="cap-google"><span>Google</span><span class="icon">⚪</span></div>
+            <div class="capsule" id="cap-ya"><span>Yandex</span><span class="icon">⚪</span></div>
+            <div class="capsule" id="cap-yt"><span>YouTube</span><span class="icon">⚪</span></div>
+            <div class="capsule" id="cap-tg"><span>Telegram</span><span class="icon">⚪</span></div>
+          </div>
+          <button class="btn btn-run-block" onclick="runBlockingTest()" id="btn-block1">▶ Запустить</button>
         </div>
+        <div class="status-output" id="out-block1">Итоги теста</div>
       </div>
-    </div>
 
-    <!-- Предупреждение -->
-    <div class="warning">
-      ⬇️ Нижеперечисленные тесты не рекомендуется проводить с включенным VPN! ⬇️
-    </div>
+      <!-- Блок 2: Проверка сайтов -->
+      <div class="card">
+        <h2>🌐 Проверка сайтов</h2>
+        <textarea id="customSitesInput" placeholder="site1.com site2.com site3.com (через пробел или энтер)"></textarea>
+        <button class="btn" onclick="runCustomSitesTest()" id="btn-custom" style="width: 100%;">▶ Запустить проверку</button>
+        <div class="custom-results" id="custom-results-container"></div>
+      </div>
 
-    <!-- Блок 2: Быстрый тест ЧС / БС -->
-    <div class="card">
-      <h2>🛡️ Быстрый тест блокировок</h2>
-      <div class="capsules-row">
-        <div class="capsule" id="cap-ya">Яндекс (БС) <span class="icon">⚪</span></div>
-        <div class="capsule" id="cap-googlesec">Гугл (ЧС) <span class="icon">⚪</span></div>
+      <!-- Предупреждение -->
+      <div class="warning">
+        Не рекомендуется проверять российские сайты с включенным VPN
       </div>
-      
-      <div class="row-flex">
-        <div class="status-output" id="out-block2">Ожидание запуска проверки...</div>
-        <button class="btn" onclick="runBlock2()" id="btn-block2">▶ Старт</button>
-      </div>
-    </div>
 
-    <!-- Блок 3: Расширенный тест сайтов (3 столбца в одном блоке) -->
-    <div class="card">
-      <h2>🌐 Расширенный тест доступности сайтов</h2>
-      <div class="grid-3">
-        <div>
-          <div class="column-title">🇷🇺 RU Сайты</div>
-          <div class="column-list" id="list-ru"></div>
-        </div>
-        <div>
-          <div class="column-title">🌍 Зарубежные</div>
-          <div class="column-list" id="list-global"></div>
-        </div>
-        <div>
-          <div class="column-title">🚫 Заблокированные</div>
-          <div class="column-list" id="list-blocked"></div>
-        </div>
-      </div>
-      
-      <div style="text-align: center; margin-top: 10px;">
-        <button class="btn" onclick="runBlock3()" id="btn-block3" style="width: 100%; max-width: 300px;">▶ Запустить полный тест</button>
-      </div>
+      <!-- Футер -->
+      <footer>
+        deampat &bull; github &bull; 2026<br>
+        NetCheck v25.10.3
+      </footer>
+    </main>
+  </div>
+
+  <!-- Боковая панель (меню) -->
+  <div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
+  <div class="drawer" id="drawer">
+    <div class="drawer-top-row">
+      <button class="btn btn-outline btn-square" onclick="toggleTheme()" title="Сменить тему">🌓</button>
+      <button class="btn btn-outline btn-square" onclick="forceAppUpdate()" title="Принудительная перезагрузка">🔄</button>
+      <button class="btn btn-outline btn-square" onclick="toggleDrawer()" title="Закрыть">✕</button>
     </div>
-  </main>
+    <a href="oldst.html" class="drawer-btn">Старая версия сайта</a>
+    <a href="sumtime.html" class="drawer-btn">ддл</a>
+    <a href="site1.html" class="drawer-btn">Кнопка 3</a>
+  </div>
 
   <script>
-    // --- Тема ---
+    // --- Тема и Meta Theme-Color ---
     const theme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', theme);
+    updateThemeMeta(theme);
+
+    function updateThemeMeta(currentTheme) {
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+      if (metaThemeColor) {
+        metaThemeColor.setAttribute('content', currentTheme === 'dark' ? '#111827' : '#f4f5f7');
+      }
+    }
+
     function toggleTheme() {
       const current = document.documentElement.getAttribute('data-theme');
       const next = current === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', next);
       localStorage.setItem('theme', next);
+      updateThemeMeta(next);
     }
 
-    // --- PWA и установка ---
+    // --- Боковая панель ---
+    function toggleDrawer() {
+      const drawer = document.getElementById('drawer');
+      const overlay = document.getElementById('drawer-overlay');
+      const isOpen = drawer.classList.contains('open');
+      if (isOpen) {
+        drawer.classList.remove('open');
+        overlay.style.display = 'none';
+      } else {
+        overlay.style.display = 'block';
+        setTimeout(() => overlay.style.opacity = '1', 10);
+        drawer.classList.add('open');
+      }
+    }
+
+    // --- PWA и принудительное обновление ---
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js');
     }
@@ -192,9 +264,8 @@
       window.location.reload(true);
     }
 
-    // --- Сетевая логика ---
+    // --- Сетевые утилиты ---
     const TIMEOUT_MS = 5000;
-    const DELAY_BETWEEN_TESTS_MS = 500;
     const delay = ms => new Promise(res => setTimeout(res, ms));
 
     async function pingDomain(domain) {
@@ -234,138 +305,128 @@
       }
     }
 
-    // --- Блок 1 ---
-    async function runBlock1() {
+    // --- Блок 1: Проверка блокировок по ТЗ ---
+    async function runBlockingTest() {
       const btn = document.getElementById('btn-block1');
       const out = document.getElementById('out-block1');
       btn.disabled = true;
-      out.className = 'status-output';
       out.innerText = 'Идет проверка...';
+      out.style.background = 'var(--bg)';
+      out.style.color = 'var(--text)';
+      out.style.borderColor = 'var(--border)';
 
-      setCapsuleState('cap-google', 'testing');
-      setCapsuleState('cap-tg', 'testing');
-      setCapsuleState('cap-yt', 'testing');
+      try {
+        // Сбрасываем Яндекс в нейтральное положение перед началом теста
+        setCapsuleState('cap-ya', 'default');
+        setCapsuleState('cap-google', 'testing');
+        setCapsuleState('cap-yt', 'testing');
+        setCapsuleState('cap-tg', 'testing');
 
-      const isGoogle = await pingDomain('google.com');
-      setCapsuleState('cap-google', isGoogle ? 'success' : 'danger');
+        // Одновременный запуск Google, Telegram, YouTube (таймаут 5с)
+        const [google, yt, tg] = await Promise.all([
+          pingDomain('google.com'),
+          pingDomain('youtube.com'),
+          pingDomain('t.me')
+        ]);
 
-      const isTg = await pingDomain('t.me');
-      setCapsuleState('cap-tg', isTg ? 'success' : 'danger');
+        setCapsuleState('cap-google', google ? 'success' : 'danger');
+        setCapsuleState('cap-yt', yt ? 'success' : 'danger');
+        setCapsuleState('cap-tg', tg ? 'success' : 'danger');
 
-      const isYt = await pingDomain('youtube.com');
-      setCapsuleState('cap-yt', isYt ? 'success' : 'danger');
+        let conclusion = '';
+        let resultBg = 'var(--bg)';
+        let resultColor = 'var(--text)';
+        let resultBorder = 'var(--border)';
 
-      if (!isGoogle) {
-        out.innerText = '❌ Интернет недоступен';
-        out.className = 'status-output red';
-      } else if (isTg && isYt) {
-        out.innerText = '✅ VPN работает';
-        out.className = 'status-output green';
-      } else {
-        out.innerText = '⚠️ Интернет доступен (VPN не работает)';
-        out.className = 'status-output yellow';
-      }
-      btn.disabled = false;
-    }
+        if (!google && !tg && !yt) {
+          // Ни один из трех не работает — проверяем Яндекс
+          setCapsuleState('cap-ya', 'testing');
+          const ya = await pingDomain('ya.ru');
+          setCapsuleState('cap-ya', ya ? 'success' : 'danger');
 
-    async function checkCustomUrl() {
-      let url = document.getElementById('customUrl').value.trim();
-      if (!url) return;
-      url = url.replace(/^https?:\/\//, '').split('/')[0];
-      
-      document.getElementById('custom-result').style.display = 'flex';
-      document.getElementById('custom-name').innerText = url;
-      
-      setCapsuleState('cap-custom', 'testing');
-      const isUp = await pingDomain(url);
-      setCapsuleState('cap-custom', isUp ? 'success' : 'danger');
-    }
-
-    // --- Блок 2 ---
-    async function runBlock2() {
-      const btn = document.getElementById('btn-block2');
-      const out = document.getElementById('out-block2');
-      btn.disabled = true;
-      out.className = 'status-output';
-      out.innerText = 'Идет проверка...';
-
-      setCapsuleState('cap-ya', 'testing');
-      setCapsuleState('cap-googlesec', 'testing');
-
-      const isYa = await pingDomain('ya.ru');
-      setCapsuleState('cap-ya', isYa ? 'success' : 'danger');
-
-      const isGoogleSec = await pingDomain('google.com');
-      setCapsuleState('cap-googlesec', isGoogleSec ? 'success' : 'danger');
-
-      if (!isYa && !isGoogleSec) {
-        out.innerText = '❌ Нет интернета';
-        out.className = 'status-output red';
-      } else if (isYa && !isGoogleSec) {
-        out.innerText = '⚠️ Белые списки (Доступ ограничен)';
-        out.className = 'status-output yellow';
-      } else {
-        out.innerText = '✅ Черные списки доступны (Блокировок нет)';
-        out.className = 'status-output green';
-      }
-      btn.disabled = false;
-    }
-
-    // --- Блок 3 ---
-    const sites = {
-      ru: [
-        {name: 'ВК', domain: 'vk.com'}, {name: 'Яндекс', domain: 'ya.ru'}, 
-        {name: 'ВБ', domain: 'wildberries.ru'}, {name: 'Озон', domain: 'ozon.ru'}, 
-        {name: 'Сбер', domain: 'sberbank.ru'}, {name: 'Макс', domain: 'max.ru'}
-      ],
-      global: [
-        {name: 'Google', domain: 'google.com'}, {name: 'TikTok', domain: 'tiktok.com'},
-        {name: 'Pinterest', domain: 'pinterest.com'}, {name: 'Roblox', domain: 'roblox.com'},
-        {name: 'Steam', domain: 'steampowered.com'}
-      ],
-      blocked: [
-        {name: 'Discord', domain: 'discord.com'}, {name: 'Telegram', domain: 't.me'}, 
-        {name: 'YouTube', domain: 'youtube.com'}, {name: 'Instagram', domain: 'instagram.com'}, 
-        {name: 'WhatsApp', domain: 'whatsapp.com'}
-      ]
-    };
-
-    function renderSites() {
-      for (const [category, list] of Object.entries(sites)) {
-        const container = document.getElementById(`list-${category}`);
-        container.innerHTML = '';
-        list.forEach((site, index) => {
-          container.innerHTML += `
-            <div class="capsule" id="cap-${category}-${index}">
-              <span>${site.name}</span>
-              <span class="icon">⚪</span>
-            </div>
-          `;
-        });
-      }
-    }
-
-    async function runBlock3() {
-      const btn = document.getElementById('btn-block3');
-      btn.disabled = true;
-      btn.innerText = '⏳ Проверка...';
-
-      for (const [category, list] of Object.entries(sites)) {
-        for (let i = 0; i < list.length; i++) {
-          const capId = `cap-${category}-${i}`;
-          setCapsuleState(capId, 'testing');
-          const isUp = await pingDomain(list[i].domain);
-          setCapsuleState(capId, isUp ? 'success' : 'danger');
-          await delay(DELAY_BETWEEN_TESTS_MS);
+          if (ya) {
+            conclusion = 'Белые списки';
+            resultBg = 'var(--orange)';
+            resultColor = '#ffffff';
+            resultBorder = 'var(--orange)';
+          } else {
+            conclusion = 'Нет соединения';
+            resultBg = 'var(--danger)';
+            resultColor = '#ffffff';
+            resultBorder = 'var(--danger)';
+          }
+        } else if (google && !tg && !yt) {
+          conclusion = 'Черные списки';
+          resultBg = 'var(--warning)';
+          resultColor = '#ffffff';
+          resultBorder = 'var(--warning)';
+        } else if (google && tg && yt) {
+          conclusion = 'ВПН работает';
+          resultBg = 'var(--success)';
+          resultColor = '#ffffff';
+          resultBorder = 'var(--success)';
+        } else {
+          conclusion = 'Возможна умная маршрутизация';
+          resultBg = 'var(--warning)';
+          resultColor = '#ffffff';
+          resultBorder = 'var(--warning)';
         }
+
+        out.innerText = conclusion;
+        out.style.background = resultBg;
+        out.style.color = resultColor;
+        out.style.borderColor = resultBorder;
+      } catch (e) {
+        out.innerText = 'Ошибка выполнения теста';
+        out.style.background = 'var(--danger)';
+        out.style.color = '#ffffff';
+      } finally {
+        btn.disabled = false;
       }
-      
-      btn.disabled = false;
-      btn.innerText = '🔄 Повторить полный тест';
     }
 
-    // Инициализация интерфейса
-    renderSites();
+    // --- Блок 2: Проверка пользовательских сайтов (1 сайт в секунду, таймаут 5с) ---
+    async function runCustomSitesTest() {
+      const input = document.getElementById('customSitesInput').value.trim();
+      const container = document.getElementById('custom-results-container');
+      const btn = document.getElementById('btn-custom');
+      container.innerHTML = '';
+
+      if (!input) return;
+
+      const rawSites = input.split(/[\s\n]+/).filter(s => s.length > 0);
+      btn.disabled = true;
+
+      try {
+        for (let i = 0; i < rawSites.length; i++) {
+          const site = rawSites[i].replace(/^https?:\/\//, '').split('/')[0];
+          
+          const capsule = document.createElement('div');
+          capsule.className = 'capsule testing';
+          capsule.style.flex = '1 1 calc(50% - 8px)';
+          capsule.style.justifyContent = 'space-between';
+          capsule.innerHTML = `<span>${site}</span><span class="icon">🔄</span>`;
+          container.appendChild(capsule);
+
+          const isUp = await pingDomain(site);
+          
+          capsule.classList.remove('testing');
+          if (isUp) {
+            capsule.classList.add('success');
+            capsule.querySelector('.icon').innerText = '✅';
+          } else {
+            capsule.classList.add('danger');
+            capsule.querySelector('.icon').innerText = '❌';
+          }
+
+          if (i < rawSites.length - 1) {
+            await delay(1000); // 1 сайт в одну секунду
+          }
+        }
+      } finally {
+        btn.disabled = false;
+      }
+    }
   </script>
 </body>
 </html>
